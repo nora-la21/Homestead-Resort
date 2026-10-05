@@ -72,6 +72,10 @@ h1,h2,h3{font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;margin:0
 .t-soak{background:linear-gradient(150deg,#3f6b5c,#24352d)}
 .t-scuba{background:linear-gradient(150deg,#46697f,#223a4a)}
 .t-sup{background:linear-gradient(150deg,#b08d57,#6e5129)}
+.t-golf{background:linear-gradient(150deg,#6d8f58,#3a5530)}
+.t-spa{background:linear-gradient(150deg,#9a6c7c,#5c3a47)}
+.t-dine{background:linear-gradient(150deg,#a5593a,#5e2f1d)}
+.t-adv{background:linear-gradient(150deg,#8a6a3a,#4a3820)}
 .t-pool{background:linear-gradient(150deg,#5a8f94,#2f5559)}
 
 .row{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
@@ -166,15 +170,16 @@ h1,h2,h3{font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;margin:0
 <aside class="side">
   <div class="eyebrow">Clickable prototype · concept</div>
   <h1>Homestead Guest App</h1>
-  <p>Every crater soak, dive, yoga class and pool cabana booked from the guest's phone. No concierge line, no front-desk wait.</p>
+  <p>The crater, golf, spa, dining and outdoor adventures, all booked from the guest's phone. No concierge line, no front-desk wait.</p>
   <div class="lbl2">Try the flow</div>
   <ol class="walk">
     <li><button data-demo="home"><b>Arrive</b><span>Live crater temperature and capacity</span></button></li>
     <li><button data-demo="scuba"><b>Book a dive</b><span>Date, option, time, add-ons, charge to room</span></button></li>
     <li><button data-demo="plans"><b>Show the pass</b><span>QR entry at the crater tunnel</span></button></li>
+    <li><button data-demo="spa"><b>Reserve dinner or the spa</b><span>Restaurants, treatments and adventures in the same flow</span></button></li>
     <li><button data-demo="chat"><b>Ask the concierge</b><span>Answers gear and kids questions, books for you</span></button></li>
   </ol>
-  <p class="fine">Illustrative prices and availability. In production this connects to the resort's reservation and room-billing systems, and the concierge answers from the resort's own knowledge base.</p>
+  <p class="fine">Activity list based on Homestead's public information. Prices and availability are illustrative. In production this connects to the resort's reservation and room-billing systems, and the concierge answers from the resort's own knowledge base.</p>
 </aside>
 <div class="phone" id="phone">
   <div class="screen" id="screen"></div>
@@ -188,18 +193,28 @@ const ACTS = {
   soak:  {id:'soak',  name:'Crater Soak & Swim', icon:'♨️', cls:'t-soak',  color:'#3f6b5c', tag:'90°–96°F geothermal water inside the limestone dome', price:25, unit:'person', durations:[60,90], mult:{60:1,90:1.5}, cap:18, hours:[9,10,11,12,13,14,15,16,17,18,19,20]},
   scuba: {id:'scuba', name:'Crater Scuba',       icon:'🤿', cls:'t-scuba', color:'#46697f', tag:'Warm-water dives, 65 ft deep. Discover or certify.', price:125, unit:'diver', durations:[90], mult:{90:1}, cap:6, hours:[9,11,13,15], variants:[['Discover Scuba (no experience)',0],['Certified diver',-30],['Full PADI Open Water (2 days)',270]]},
   sup:   {id:'sup',   name:'SUP Yoga in the Crater', icon:'🧘', cls:'t-sup', color:'#b08d57', tag:'Paddleboard yoga, steam and skylight above.', price:45, unit:'person', durations:[60], mult:{60:1}, cap:10, hours:[8,10,16,18]},
-  pool:  {id:'pool',  name:'Heated Outdoor Pools', icon:'🏊', cls:'t-pool', color:'#5a8f94', tag:'Open year-round. Reserve a cabana or poolside table.', price:0, unit:'party', durations:[120], mult:{120:1}, cap:30, hours:[10,12,14,16,18], variants:[['Pool access (included w/ stay)',0],['Poolside cabana',60],['Private family cabana',95]]}
+  pool:  {id:'pool',  name:'Heated Outdoor Pools', icon:'🏊', cls:'t-pool', color:'#5a8f94', tag:'Open year-round. Reserve a cabana or poolside table.', price:0, unit:'party', durations:[120], mult:{120:1}, cap:30, hours:[10,12,14,16,18], variants:[['Pool access (included w/ stay)',0],['Poolside cabana',60],['Private family cabana',95]]},
+  golf:  {id:'golf',  name:'Homestead Golf Course', icon:'⛳', cls:'t-golf', color:'#5b7d4a', tag:'Redesigned 18-hole course by John Fought. Reopens July 2027.', price:95, unit:'player', durations:[240], mult:{240:1}, cap:16, hours:[8,10,12,14], soon:'July 2027'},
+  pickle:{id:'pickle',name:'Pickleball Courts', icon:'🏓', cls:'t-golf', color:'#5b7d4a', tag:'Six courts on property. Paddles and balls at the desk.', price:20, unit:'party', durations:[60,90], mult:{60:1,90:1.5}, cap:6, hours:[8,9,10,11,12,13,14,15,16,17,18]},
+  spa:   {id:'spa',   name:'Homestead Spa', icon:'💆', cls:'t-spa', color:'#8a5a6a', tag:'Massage, body and nail services. Couples suites available.', price:140, unit:'guest', durations:[50,80], mult:{50:1,80:1.5}, cap:4, hours:[9,11,13,15,17], variants:[['Massage',0],['Couples massage',60],['Body treatment',20],['Nail services',-80]]},
+  dine:  {id:'dine',  name:'Dining Reservations', icon:'🍽️', cls:'t-dine', color:'#8a4a2f', tag:'Simon\'s, 1886 Grill & Smokehouse, and The Milk House.', price:0, unit:'party', durations:[90], mult:{90:1}, cap:20, hours:[11,12,17,18,19,20], variants:[['Simon\'s',0],['1886 Grill & Smokehouse',0],['The Milk House (coffee, pastries, ice cream)',0]]},
+  horse: {id:'horse', name:'Horseback Riding', icon:'🐴', cls:'t-adv', color:'#7a5c2e', tag:'Guided trail rides in the Wasatch foothills.', price:95, unit:'rider', durations:[60], mult:{60:1}, cap:8, hours:[9,11,14,16]},
+  sleigh:{id:'sleigh',name:'Sleigh & Hay Rides', icon:'🛷', cls:'t-adv', color:'#7a5c2e', tag:'Sleigh rides in winter, hayrides in summer, ending at the fire pits.', price:35, unit:'guest', durations:[45], mult:{45:1}, cap:16, hours:[11,14,17,19]},
+  tube:  {id:'tube',  name:'Tubing at Soldier Hollow', icon:'🎿', cls:'t-adv', color:'#46697f', tag:'Some of Utah\'s longest tubing lanes with a magic carpet lift. Shuttle from the lobby.', price:28, unit:'guest', durations:[120], mult:{120:1}, cap:40, hours:[10,12,14,16]},
+  adv:   {id:'adv',   name:'Guided Adventures', icon:'🏔️', cls:'t-adv', color:'#46697f', tag:'Guided ATV, e-bike and snowmobile tours through Adventourage.', price:150, unit:'guest', durations:[120], mult:{120:1}, cap:8, hours:[9,13], variants:[['CanAm / ATV tour',0],['E-bike tour',-50],['Snowmobile tour (winter)',60]]}
 };
+const CATS=[['Crater & Pools',['soak','scuba','sup','pool']],['Golf & Courts',['golf','pickle']],['Spa',['spa']],['Dining',['dine']],['Adventures',['horse','sleigh','tube','adv']]];
 const ADDONS = {
   soak:[['Towel & locker',6],['Snorkel set',8],['Hot cocoa after',5]],
   scuba:[['Underwater photos',35],['Wetsuit hood & gloves',10]],
   sup:[['Board & mat included',0],['Post-class tea',4]],
-  pool:[['Towel service',6],['Poolside food order',0]]
+  pool:[['Towel service',6],['Poolside food order',0]],
+  golf:[['Cart',0]],pickle:[['Paddle rental',5],['Ball can',4]],spa:[['Champagne & chocolate',28],['Robe & slippers',0]],dine:[['Window table request',0],['Celebration dessert',12]],horse:[['Helmet included',0],['Trail photo',15]],sleigh:[['Cocoa & s\'mores at the fire pit',8]],tube:[['Shuttle from lobby',0],['Hot cocoa',5]],adv:[['Gear & helmet included',0],['Action photos',30]]
 };
 const BOOKED = {}; // pseudo-random availability seeded by day+slot
 
 const state = {
-  tab:'home', view:null, plans:load('plans',[]), msgs:[], book:null, pass:null, guest:{name:'Alex', room:'214', stay:'Oct 5 – Oct 8'}
+  tab:'home', view:null, plans:load('plans',[]), msgs:[], book:null, pass:null, notify:new Set(), guest:{name:'Alex', room:'214', stay:'Oct 5 – Oct 8'}
 };
 function load(k,d){try{return JSON.parse(localStorage.getItem('hs_'+k))??d}catch(e){return d}}
 function save(){try{localStorage.setItem('hs_plans',JSON.stringify(state.plans))}catch(e){}}
@@ -237,7 +252,7 @@ function render(){
 }
 function bind(){
   document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
-  document.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>startBook(b.dataset.act));
+  document.querySelectorAll('[data-act]').forEach(b=>b.onclick=e=>{e.preventDefault();startBook(b.dataset.act)});
   document.querySelectorAll('[data-pass]').forEach(b=>b.onclick=()=>{state.pass=b.dataset.pass;state.tab='plans';state.view=null;render()});
   document.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=()=>{state.plans=state.plans.filter(p=>p.id!==b.dataset.cancel);save();toast('Booking cancelled. No fee.');render()});
   bindBook();
@@ -272,14 +287,15 @@ function homeView(){
   ${next?`<div class="sec"><h2>Up next</h2>
     <div class="card"><div class="row"><div class="badge">${ACTS[next.act].icon}</div><div class="grow"><b>${ACTS[next.act].name}</b><small>${new Date(next.date+'T12:00').toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'})} · ${fmtH(next.hour)} · ${next.guests} guest${next.guests>1?'s':''}</small></div><button class="pill" data-pass="${next.id}">Open pass</button></div></div></div>`:''}
 
-  <div class="sec"><h2>Book in two taps <small data-go="book">See all</small></h2>
-    <div class="tiles">${Object.values(ACTS).map(a=>`<button class="tile ${a.cls}" data-act="${a.id}"><span class="ic">${a.icon}</span><span><b>${a.name}</b><small>${a.price?'from '+money(a.price):'Included'}</small></span></button>`).join('')}</div>
+  <div class="sec"><h2>Everything at Homestead <small data-go="book">See all 12</small></h2>
+    <div class="tiles">${['soak','scuba','golf','spa','dine','adv'].map(i=>ACTS[i]).map(a=>`<button class="tile ${a.cls}" data-act="${a.id}"><span class="ic">${a.icon}</span><span><b>${a.name}</b><small>${a.soon?'Reopens '+a.soon:a.id==='dine'?'3 restaurants':a.price?'from '+money(a.price):'Included'}</small></span></button>`).join('')}</div>
   </div>
 
   <div class="sec"><h2>Today at the resort</h2>
     <div class="card">
       <div class="row"><div class="badge">🧘</div><div class="grow"><b>SUP Yoga</b><small>4:00 PM · ${spotsLeft(ACTS.sup,dayKey(days[0]),16)} spots left</small></div><button class="pill" data-act="sup">Book</button></div>
       <div class="row"><div class="badge">🤿</div><div class="grow"><b>Discover Scuba</b><small>1:00 PM · ${spotsLeft(ACTS.scuba,dayKey(days[0]),13)} spots left</small></div><button class="pill" data-act="scuba">Book</button></div>
+      <div class="row"><div class="badge">🍽️</div><div class="grow"><b>1886 Grill &amp; Smokehouse</b><small>Dinner tonight · ${spotsLeft(ACTS.dine,dayKey(days[0]),18)} tables at 6 PM</small></div><button class="pill" data-act="dine">Reserve</button></div>
       <div class="row"><div class="badge">🌅</div><div class="grow"><b>Sunset soak</b><small>Last entry 7:30 PM · bring a robe</small></div><button class="pill" data-act="soak">Book</button></div>
     </div>
   </div>
@@ -294,10 +310,10 @@ function homeView(){
 function listView(){
   return `<div class="top"><h1>Experiences</h1></div>
   <div class="sec" style="padding-top:8px">
-  ${Object.values(ACTS).map(a=>`<button class="card act" data-act="${a.id}">
+  ${CATS.map(([c,ids])=>`<div class="lbl" style="margin-top:6px">${c}</div>`+ids.map(i=>ACTS[i]).map(a=>`<button class="card act" data-act="${a.id}">
     <div class="badge" style="background:${a.color}">${a.icon}</div>
     <div style="flex:1"><b>${a.name}</b><small>${a.tag}</small></div>
-    <div class="price">${a.price?money(a.price):'Free'}</div></button>`).join('')}
+    <div class="price">${a.soon?'<span class="pill warn">'+a.soon+'</span>':a.id==='dine'?'Reserve':a.price?money(a.price):'Free'}</div></button>`).join('')).join('')}
   <div class="note">Prices shown are placeholders for the demo.</div></div>`;
 }
 
@@ -316,6 +332,11 @@ function bookPrice(){
 }
 function bookView(){
   const b=state.book,a=ACTS[b.act],p=bookPrice();
+  if(a.soon){const on=state.notify.has(a.id);return `<div class="top"><button class="back" data-go="${state.tab}">←</button><h1>${a.name}</h1></div>
+  <div class="sec" style="padding-top:8px"><div class="card"><div class="pill warn" style="display:inline-block;margin-bottom:8px">Reopens ${a.soon}</div>
+  <p style="margin:0 0 10px">${a.tag}</p><p style="margin:0;color:var(--muted)">Be first to book tee times when the course opens. Guests staying at Homestead get early access.</p></div>
+  <button class="btn" id="notify" style="margin-top:14px">${on?'✓ You are on the list':'Notify me when tee times open'}</button>
+  <p class="note">Meanwhile: <a href="#" data-act="pickle" style="color:var(--teal)">book a pickleball court</a> instead.</p></div>`}
   return `<div class="top"><button class="back" data-go="${state.tab}">←</button><h1>${a.name}</h1></div>
   <div class="sec" style="padding-top:4px">
     <small style="color:var(--muted)">${a.tag}</small>
@@ -331,11 +352,12 @@ function bookView(){
     <div class="card">${ADDONS[b.act].map((x,i)=>`<button class="chk ${b.addons.has(i)?'on':''}" data-a="${i}"><i>${b.addons.has(i)?'✓':''}</i><span style="flex:1">${x[0]}</span><span class="price">${x[1]?'+'+money(x[1]):'Free'}</span></button>`).join('')}</div>
     ${b.act==='scuba'?'<p class="note" style="text-align:left;padding:10px 0 0">Gear, instructor and tank included. Health questionnaire is completed digitally after booking, no clipboard at the desk.</p>':''}
   </div>
-  <div class="sticky"><div class="total"><span>Total · charged to room ${state.guest.room}</span><span>${money(p.total)}</span></div>
+  <div class="sticky"><div class="total"><span>${p.total?'Total · charged to room '+state.guest.room:'No charge to reserve'}</span><span>${p.total?money(p.total):'$0'}</span></div>
     <button class="btn" id="confirm" ${b.hour==null?'disabled':''}>${b.hour==null?'Pick a time':'Confirm booking'}</button></div>`;
 }
 function bindBook(){
   if(state.view!=='book')return;
+  const nb=$('#notify');if(nb){nb.onclick=()=>{state.notify.add(state.book.act);toast('You are on the list. We will message you.');render()};return}
   const b=state.book;
   const rr=()=>{const y=$('#screen').scrollTop;render();$('#screen').scrollTop=y};
   document.querySelectorAll('[data-d]').forEach(e=>e.onclick=()=>{b.date=e.dataset.d;b.hour=null;rr()});
@@ -382,22 +404,27 @@ function plansView(){
 
 /* concierge chat (scripted for the demo; production = LLM + resort knowledge base + booking tools) */
 const KB=[
+  [/golf|tee|course/i,()=>({t:"The Homestead Golf Course is being redesigned by John Fought and reopens in July 2027. I can put you on the list for early tee time access.",a:[['Notify me','act:golf']]})],
+  [/spa|massage|nail|couples/i,()=>({t:"The spa offers massage, body and nail services, plus couples suites. A 50-minute massage is a good fit after a crater soak.",a:[['Book the spa','act:spa']]})],
+  [/pickle|court|tennis/i,()=>({t:"There are six pickleball courts on property. Paddle and ball rentals are at the desk, or add them to your booking.",a:[['Reserve a court','act:pickle']]})],
+  [/horse|ride|trail|hayride|sleigh/i,()=>({t:"We run guided horseback rides, plus sleigh rides in winter and hayrides in summer that end at the fire pits.",a:[['Horseback','act:horse'],['Sleigh & hay rides','act:sleigh']]})],
+  [/tubing|snow|ski|snowmobile|atv|e-?bike|adventure/i,()=>({t:"Tubing at Soldier Hollow has a magic carpet lift and a shuttle from the lobby. Our partner Adventourage runs guided ATV, e-bike and snowmobile tours.",a:[['Tubing','act:tube'],['Guided adventures','act:adv']]})],
   [/scuba|dive|diving|certif|padi/i,()=>({t:"Crater diving is warm water (about 90°F) and 65 ft deep, so no thick wetsuit. We have Discover Scuba for first timers, a half-day for certified divers, and the full PADI Open Water over two days. All gear is included.",a:[['Book scuba','act:scuba']]})],
   [/soak|hot ?spring|crater|swim|snorkel/i,()=>({t:"The crater is 90–96°F year round. You walk in through a 110 ft tunnel into the dome. Sessions are 60 or 90 minutes. Snorkel sets and towels are add-ons, and kids are welcome.",a:[['Book a soak','act:soak']]})],
   [/yoga|sup|paddle/i,()=>({t:"SUP Yoga is held inside the crater, on the water. No experience needed, boards and mats are provided. Classes run at 8, 10, 4 and 6.",a:[['Book SUP Yoga','act:sup']]})],
   [/pool|cabana|winter|cold/i,()=>({t:"The outdoor pools are heated and open year-round. Cabanas can be reserved and have poolside food service.",a:[['Reserve a cabana','act:pool']]})],
   [/towel|robe|locker|bring|wear|swimsuit/i,()=>({t:"Bring a swimsuit and sandals. Towels and lockers are available at the crater for $6, and your room robe is welcome on the walk over. I can add a towel to any booking."})],
   [/kid|child|age|family/i,()=>({t:"Kids are welcome in the soak and pools. Scuba starts at age 10 for Discover, 10+ for Junior Open Water. SUP Yoga is best for ages 8+."})],
-  [/dinner|eat|food|restaurant|hungry|lunch|breakfast/i,()=>({t:"Poolside food service runs 11–7. For dinner I'd suggest booking a table after your soak, since you'll be hungry. (In production this connects to the dining reservation system.)"})],
+  [/dinner|eat|food|restaurant|hungry|lunch|breakfast|coffee|simon|milk/i,()=>({t:"You have three choices: Simon's, 1886 Grill & Smokehouse, and The Milk House for coffee, pastries and ice cream. Book a table after your soak, you'll be hungry.",a:[['Reserve a table','act:dine']]})],
   [/cancel|change|reschedule/i,()=>({t:"You can cancel any booking from My Plans, free up to 4 hours before.",a:[['Open My Plans','go:plans']]})],
   [/hour|open|close|when/i,()=>({t:"The crater is open 9 AM – 8 PM daily, last entry 7:30. The pools are open 10 AM – 8 PM."})],
   [/call|human|person|front desk|staff/i,()=>({t:"Of course. I've flagged this for the concierge team and they'll message you within a few minutes. Dial 0 from your room phone for anything urgent."})],
 ];
-const SUGGEST=["What should I bring to the crater?","How does scuba work?","Is the pool open in winter?","Anything for kids?","Talk to a person"];
+const SUGGEST=["What should I bring to the crater?","Is the golf course open?","Where can I eat tonight?","Anything for kids?","Winter activities?","Talk to a person"];
 function chatView(){return `<div class="chat" style="height:100%"><div class="top" style="padding-bottom:8px"><h1>Concierge</h1><span class="pill" style="margin-left:auto">● Online 24/7</span></div><div class="msgs" id="msgs"></div><div class="suggest" id="sugg">${SUGGEST.map(s=>`<button>${s}</button>`).join('')}</div><form class="compose" id="f"><input id="inp" placeholder="Ask anything…" autocomplete="off"><button>➤</button></form></div>`}
 function chatInit(){
   const s=$('#screen');s.style.overflow='hidden';
-  if(!state.msgs.length)state.msgs.push({r:'bot',t:`Hi ${state.guest.name}! I can answer questions and book the crater, scuba, yoga and pools right here. What sounds good?`});
+  if(!state.msgs.length)state.msgs.push({r:'bot',t:`Hi ${state.guest.name}! I can answer questions and book the crater, golf, spa, dining and adventures right here. What sounds good?`});
   paintMsgs();
   $('#f').onsubmit=e=>{e.preventDefault();const v=$('#inp').value.trim();if(v){$('#inp').value='';ask(v)}};
   document.querySelectorAll('#sugg button').forEach(b=>b.onclick=()=>ask(b.textContent));
@@ -418,7 +445,7 @@ function ask(q){
 /* leave chat → restore scroll */
 const _go=go;go=function(t){const s=$('#screen');if(s)s.style.overflow='';_go(t)};
 render();
-document.querySelectorAll('[data-demo]').forEach(b=>b.onclick=()=>{const d=b.dataset.demo;if(d==='scuba'){state.tab='book';startBook('scuba')}else go(d)});
+document.querySelectorAll('[data-demo]').forEach(b=>b.onclick=()=>{const d=b.dataset.demo;if(d==='scuba'||d==='spa'){state.tab='book';startBook(d==='spa'?'dine':d)}else go(d)});
 </script>
 </body>
 </html>
