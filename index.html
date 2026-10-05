@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Homestead Guest App</title>
+<meta name="theme-color" content="#0f3b3a">
+<style>
+:root{color-scheme:light;
+  --stage:#d9d2c3;
+  --ink:#10201f; --muted:#5d6f6d; --bg:#f4efe6; --card:#fffdf8; --line:#e4dccd;
+  --deep:#0f3b3a; --teal:#1f7a74; --mint:#bfe6dd; --sun:#e0a23b; --rust:#b8553a;
+  --shadow:0 6px 20px rgba(16,32,31,.10);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{background:var(--stage);padding:16px;gap:48px;font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);display:flex;justify-content:center;align-items:center}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+h1,h2,h3{font-family:Georgia,"Times New Roman",serif;font-weight:600;margin:0;letter-spacing:.2px}
+
+
+.side{max-width:340px;display:none;color:var(--ink)}
+.side h1{font-size:34px;line-height:1.1;margin:8px 0 12px}
+.side p{color:var(--muted);margin:0 0 16px}
+.eyebrow{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--teal);font-weight:700}
+.lbl2{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:22px 0 8px}
+.walk{list-style:none;margin:0 0 18px;padding:0;display:flex;flex-direction:column;gap:8px}
+.walk button{width:100%;text-align:left;padding:12px 14px;border-radius:14px;background:var(--card);border:1px solid var(--line);display:block}
+.walk button:hover,.walk button:focus-visible{border-color:var(--teal);outline:none}
+.walk b{display:block}.walk span{font-size:13px;color:var(--muted)}
+.fine{font-size:12px}
+@media (min-width:900px){.side{display:block}}
+@media (max-width:479px){body{padding:0}.phone{max-height:none}}
+.phone{width:100%;max-width:420px;height:100vh;max-height:880px;background:var(--bg);position:relative;overflow:hidden;display:flex;flex-direction:column}
+@media (min-width:480px){.phone{height:860px;border-radius:38px;box-shadow:0 30px 80px rgba(0,0,0,.35);border:8px solid #111}}
+.screen{flex:1;overflow-y:auto;padding-bottom:16px;scrollbar-width:none}
+.screen::-webkit-scrollbar{display:none}
+
+/* hero */
+.hero{position:relative;color:#fff;padding:22px 20px 70px;background:
+  radial-gradient(120% 90% at 50% 120%,#37b3a3 0%,transparent 60%),
+  linear-gradient(170deg,#0f3b3a 0%,#175e5a 55%,#2a8d84 100%);overflow:hidden}
+.hero svg.dome{position:absolute;right:-30px;bottom:-6px;width:230px;opacity:.9}
+.steam{position:absolute;border-radius:50%;background:rgba(255,255,255,.12);filter:blur(14px);animation:rise 7s infinite ease-in}
+@keyframes rise{0%{transform:translateY(40px) scale(.7);opacity:0}30%{opacity:.8}100%{transform:translateY(-80px) scale(1.3);opacity:0}}
+.brand{font-size:11px;letter-spacing:3px;text-transform:uppercase;opacity:.8}
+.hero h1{font-size:28px;margin:10px 0 4px;max-width:230px;line-height:1.15}
+.hero p{margin:0;opacity:.85;max-width:230px;font-size:14px}
+.chips{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.chip{background:rgba(255,255,255,.16);backdrop-filter:blur(6px);padding:6px 10px;border-radius:99px;font-size:12px}
+
+.pull{margin:-44px 16px 0;position:relative;z-index:2}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:14px}
+.live{display:grid;grid-template-columns:repeat(3,1fr);text-align:center;gap:6px}
+.live b{display:block;font-family:Georgia,serif;font-size:22px;color:var(--teal)}
+.live span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.bar{height:6px;background:var(--line);border-radius:9px;overflow:hidden;margin-top:10px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),var(--sun))}
+
+.sec{padding:20px 16px 0}
+.sec h2{font-size:19px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:baseline}
+.sec h2 small{font:12px system-ui;color:var(--teal);cursor:pointer}
+
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{border-radius:16px;padding:14px;color:#fff;text-align:left;min-height:104px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:var(--shadow);transition:transform .12s}
+.tile:active{transform:scale(.97)}
+.tile .ic{font-size:26px}
+.tile b{font-family:Georgia,serif;font-size:16px;display:block}
+.tile small{opacity:.85;font-size:12px}
+.t-soak{background:linear-gradient(150deg,#1f7a74,#0f3b3a)}
+.t-scuba{background:linear-gradient(150deg,#2f6fa8,#12335a)}
+.t-sup{background:linear-gradient(150deg,#d0883a,#8a4b22)}
+.t-pool{background:linear-gradient(150deg,#3aaed0,#1b6d8a)}
+
+.row{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border:0}
+.row .badge{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:20px;background:var(--mint);flex:none}
+.row .grow{flex:1;min-width:0}
+.row b{display:block}
+.row small{color:var(--muted)}
+.pill{font-size:11px;padding:3px 8px;border-radius:99px;background:var(--mint);color:var(--deep);font-weight:600}
+.pill.warn{background:#f6dfb5;color:#6b4710}
+
+.btn{display:block;width:100%;background:var(--deep);color:#fff;padding:14px;border-radius:14px;font-weight:600;text-align:center}
+.btn.alt{background:transparent;color:var(--deep);border:1.5px solid var(--deep)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* tab bar */
+.tabs{display:flex;border-top:1px solid var(--line);background:var(--card);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--muted);padding:6px 0;position:relative}
+.tabs button .i{font-size:20px;filter:grayscale(1);opacity:.7}
+.tabs button.on{color:var(--teal);font-weight:700}
+.tabs button.on .i{filter:none;opacity:1}
+.dot{position:absolute;top:2px;right:26%;background:var(--rust);color:#fff;border-radius:9px;font-size:10px;min-width:16px;height:16px;display:grid;place-items:center}
+
+/* header for inner pages */
+.top{display:flex;align-items:center;gap:10px;padding:16px 16px 4px}
+.top h1{font-size:24px}
+.back{width:34px;height:34px;border-radius:50%;background:var(--card);border:1px solid var(--line);display:grid;place-items:center}
+
+/* booking */
+.act{display:flex;gap:12px;padding:12px;margin-bottom:10px;align-items:center;text-align:left;width:100%}
+.act .badge{width:54px;height:54px;border-radius:14px;display:grid;place-items:center;font-size:26px;flex:none;color:#fff}
+.act b{font-family:Georgia,serif;font-size:16px}
+.act small{display:block;color:var(--muted)}
+.price{font-weight:700;color:var(--teal)}
+
+.seg{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.seg button{flex:none;padding:8px 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);text-align:center;min-width:56px}
+.seg button.on{border-color:var(--teal);background:var(--mint);color:var(--deep);font-weight:700}
+.seg button small{display:block;font-size:10px;opacity:.7}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.slots button{padding:10px 0;border-radius:12px;border:1.5px solid var(--line);background:var(--card);font-weight:600}
+.slots button small{display:block;font-weight:400;font-size:10px;color:var(--muted)}
+.slots button.on{border-color:var(--teal);background:var(--teal);color:#fff}
+.slots button.on small{color:#e3f6f2}
+.slots button:disabled{opacity:.35;text-decoration:line-through;cursor:not-allowed}
+.lbl{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:16px 0 8px}
+.step{display:flex;align-items:center;justify-content:space-between;padding:8px 0}
+.step .ctl{display:flex;align-items:center;gap:14px}
+.step .ctl button{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--teal);color:var(--teal);font-size:18px;line-height:1}
+.chk{display:flex;gap:10px;align-items:center;padding:10px 0;width:100%;text-align:left}
+.chk i{width:22px;height:22px;border-radius:7px;border:1.5px solid var(--teal);display:grid;place-items:center;font-style:normal;color:#fff;flex:none}
+.chk.on i{background:var(--teal)}
+.sticky{position:sticky;bottom:0;background:linear-gradient(transparent,var(--bg) 30%);padding:18px 16px 12px}
+.total{display:flex;justify-content:space-between;margin-bottom:8px;font-weight:600}
+
+/* pass */
+.pass{background:linear-gradient(160deg,#0f3b3a,#1f7a74);color:#fff;border-radius:20px;padding:18px;position:relative;overflow:hidden;margin-bottom:14px}
+.pass:after{content:"";position:absolute;left:-10px;right:-10px;bottom:62px;border-top:2px dashed rgba(255,255,255,.35)}
+.pass h3{font-size:20px}
+.pass .meta{display:flex;justify-content:space-between;margin:10px 0 52px;font-size:13px;opacity:.9}
+.pass .meta b{display:block;font-size:15px}
+.pass .qrline{display:flex;align-items:center;gap:12px;margin-top:22px}
+.qr{width:54px;height:54px;background:#fff;border-radius:8px;padding:4px;flex:none}
+.pass .qrline small{opacity:.85}
+.pass .x{position:absolute;top:12px;right:14px;font-size:12px;opacity:.8;text-decoration:underline}
+
+/* chat */
+.chat{display:flex;flex-direction:column;height:100%}
+.msgs{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:8px;scrollbar-width:none}
+.m{max-width:84%;padding:10px 13px;border-radius:16px;white-space:pre-wrap}
+.m.bot{background:var(--card);border:1px solid var(--line);align-self:flex-start;border-bottom-left-radius:4px}
+.m.me{background:var(--deep);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.m .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.m .acts button{background:var(--mint);color:var(--deep);padding:6px 10px;border-radius:99px;font-size:12px;font-weight:600}
+.suggest{display:flex;gap:6px;overflow-x:auto;padding:4px 16px 8px;scrollbar-width:none}
+.suggest button{flex:none;background:var(--card);border:1px solid var(--line);border-radius:99px;padding:7px 12px;font-size:13px}
+.compose{display:flex;gap:8px;padding:8px 12px 12px;border-top:1px solid var(--line);background:var(--card)}
+.compose input{flex:1;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:99px;padding:11px 14px;font:inherit;outline:none}
+.compose button{background:var(--teal);color:#fff;width:42px;border-radius:50%;font-size:16px}
+.typing span{display:inline-block;width:6px;height:6px;margin:0 2px;background:var(--muted);border-radius:50%;animation:b 1s infinite}
+.typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+
+.toast{position:absolute;left:16px;right:16px;bottom:78px;background:var(--deep);color:#fff;padding:12px 14px;border-radius:14px;box-shadow:var(--shadow);transform:translateY(20px);opacity:0;pointer-events:none;transition:.25s;z-index:9}
+.toast.show{transform:none;opacity:1}
+.note{font-size:11px;color:var(--muted);text-align:center;padding:18px 24px 6px}
+.empty{text-align:center;color:var(--muted);padding:40px 20px}
+.empty .big{font-size:40px}
+</style>
+</head>
+<body>
+<aside class="side">
+  <div class="eyebrow">Clickable prototype · concept</div>
+  <h1>Homestead Guest App</h1>
+  <p>Every crater soak, dive, yoga class and pool cabana booked from the guest's phone. No concierge line, no front-desk wait.</p>
+  <div class="lbl2">Try the flow</div>
+  <ol class="walk">
+    <li><button data-demo="home"><b>Arrive</b><span>Live crater temperature and capacity</span></button></li>
+    <li><button data-demo="scuba"><b>Book a dive</b><span>Date, option, time, add-ons, charge to room</span></button></li>
+    <li><button data-demo="plans"><b>Show the pass</b><span>QR entry at the crater tunnel</span></button></li>
+    <li><button data-demo="chat"><b>Ask the concierge</b><span>Answers gear and kids questions, books for you</span></button></li>
+  </ol>
+  <p class="fine">Illustrative prices and availability. In production this connects to the resort's reservation and room-billing systems, and the concierge answers from the resort's own knowledge base.</p>
+</aside>
+<div class="phone" id="phone">
+  <div class="screen" id="screen"></div>
+  <nav class="tabs" id="tabs"></nav>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+/* ---------- Data (illustrative, replace with resort PMS / booking system) ---------- */
+const ACTS = {
+  soak:  {id:'soak',  name:'Crater Soak & Swim', icon:'♨️', cls:'t-soak',  color:'#1f7a74', tag:'90°–96°F geothermal water inside the limestone dome', price:25, unit:'person', durations:[60,90], mult:{60:1,90:1.5}, cap:18, hours:[9,10,11,12,13,14,15,16,17,18,19,20]},
+  scuba: {id:'scuba', name:'Crater Scuba',       icon:'🤿', cls:'t-scuba', color:'#2f6fa8', tag:'Warm-water dives, 65 ft deep. Discover or certify.', price:125, unit:'diver', durations:[90], mult:{90:1}, cap:6, hours:[9,11,13,15], variants:[['Discover Scuba (no experience)',0],['Certified diver',-30],['Full PADI Open Water (2 days)',270]]},
+  sup:   {id:'sup',   name:'SUP Yoga in the Crater', icon:'🧘', cls:'t-sup', color:'#c47a2c', tag:'Paddleboard yoga, steam and skylight above.', price:45, unit:'person', durations:[60], mult:{60:1}, cap:10, hours:[8,10,16,18]},
+  pool:  {id:'pool',  name:'Heated Outdoor Pools', icon:'🏊', cls:'t-pool', color:'#2a8fb0', tag:'Open year-round. Reserve a cabana or poolside table.', price:0, unit:'party', durations:[120], mult:{120:1}, cap:30, hours:[10,12,14,16,18], variants:[['Pool access (included w/ stay)',0],['Poolside cabana',60],['Private family cabana',95]]}
+};
+const ADDONS = {
+  soak:[['Towel & locker',6],['Snorkel set',8],['Hot cocoa after',5]],
+  scuba:[['Underwater photos',35],['Wetsuit hood & gloves',10]],
+  sup:[['Board & mat included',0],['Post-class tea',4]],
+  pool:[['Towel service',6],['Poolside food order',0]]
+};
+const BOOKED = {}; // pseudo-random availability seeded by day+slot
+
+const state = {
+  tab:'home', view:null, plans:load('plans',[]), msgs:[], book:null, pass:null, guest:{name:'Alex', room:'214', stay:'Oct 5 – Oct 8'}
+};
+function load(k,d){try{return JSON.parse(localStorage.getItem('hs_'+k))??d}catch(e){return d}}
+function save(){try{localStorage.setItem('hs_plans',JSON.stringify(state.plans))}catch(e){}}
+
+const $=s=>document.querySelector(s);
+const fmtH=h=>{const ap=h>=12?'PM':'AM';const x=h%12||12;return x+':00 '+ap};
+const money=n=>'$'+n.toFixed(n%1?2:0);
+const days=[...Array(7)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()+i);return d});
+const dayLbl=d=>d.toLocaleDateString('en-US',{weekday:'short'});
+const dayKey=d=>d.toISOString().slice(0,10);
+function spotsLeft(a,dKey,h){
+  let s=0;for(const c of a.id+dKey+h)s=(s*31+c.charCodeAt(0))>>>0;
+  const taken=s%(a.cap+2);
+  const mine=state.plans.filter(p=>p.act===a.id&&p.date===dKey&&p.hour===h).reduce((t,p)=>t+p.guests,0);
+  return Math.max(0,a.cap-Math.min(taken,a.cap)-mine);
+}
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('show'),2600)}
+
+/* ---------- Render ---------- */
+const TABS=[['home','🏠','Home'],['book','📅','Book'],['plans','🎟️','My Plans'],['chat','💬','Concierge']];
+function renderTabs(){
+  $('#tabs').innerHTML=TABS.map(([k,i,l])=>`<button class="${state.tab===k&&!state.view?'on':''}" data-tab="${k}"><span class="i">${i}</span>${l}${k==='plans'&&state.plans.length?`<span class="dot">${state.plans.length}</span>`:''}</button>`).join('');
+  document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>go(b.dataset.tab));
+}
+function go(tab){state.tab=tab;state.view=null;state.book=null;render();$('#screen').scrollTop=0}
+function render(){
+  renderTabs();
+  const s=$('#screen');
+  if(state.view==='book')s.innerHTML=bookView();
+  else if(state.tab==='home')s.innerHTML=homeView();
+  else if(state.tab==='book')s.innerHTML=listView();
+  else if(state.tab==='plans')s.innerHTML=plansView();
+  else if(state.tab==='chat'){s.innerHTML=chatView();chatInit();return}
+  bind();
+}
+function bind(){
+  document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
+  document.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>startBook(b.dataset.act));
+  document.querySelectorAll('[data-pass]').forEach(b=>b.onclick=()=>{state.pass=b.dataset.pass;state.tab='plans';state.view=null;render()});
+  document.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=()=>{state.plans=state.plans.filter(p=>p.id!==b.dataset.cancel);save();toast('Booking cancelled. No fee.');render()});
+  bindBook();
+}
+
+/* home */
+function homeView(){
+  const next=state.plans.slice().sort((a,b)=>(a.date+a.hour).localeCompare(b.date+b.hour))[0];
+  return `
+  <div class="hero">
+    <div class="steam" style="left:55%;bottom:20px;width:70px;height:70px"></div>
+    <div class="steam" style="left:70%;bottom:10px;width:90px;height:90px;animation-delay:2.5s"></div>
+    <svg class="dome" viewBox="0 0 230 150"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9dcc3"/><stop offset="1" stop-color="#a99571"/></linearGradient></defs>
+      <path d="M10 150 C 20 70, 70 20, 115 20 C 160 20, 210 70, 220 150Z" fill="url(#g)"/>
+      <ellipse cx="115" cy="22" rx="22" ry="7" fill="#37b3a3"/>
+      <path d="M30 150 C 45 95, 80 60,115 58 C150 60,185 95,200 150Z" fill="rgba(0,0,0,.12)"/></svg>
+    <div class="brand">Homestead · Midway, Utah</div>
+    <h1>Good ${new Date().getHours()<12?'morning':new Date().getHours()<18?'afternoon':'evening'}, ${state.guest.name}</h1>
+    <p>Room ${state.guest.room} · ${state.guest.stay}</p>
+    <div class="chips"><span class="chip">☀️ 58°F, clear</span><span class="chip">❄️ Pools open</span></div>
+  </div>
+  <div class="pull card">
+    <div class="live">
+      <div><b>94°F</b><span>Crater water</span></div>
+      <div><b>7</b><span>In crater now</span></div>
+      <div><b>Low</b><span>Wait · 5 min</span></div>
+    </div>
+    <div class="bar"><i style="width:38%"></i></div>
+    <small style="color:var(--muted);display:block;margin-top:6px">Crater is 38% full. Good time to head over.</small>
+  </div>
+
+  ${next?`<div class="sec"><h2>Up next</h2>
+    <div class="card"><div class="row"><div class="badge">${ACTS[next.act].icon}</div><div class="grow"><b>${ACTS[next.act].name}</b><small>${new Date(next.date+'T12:00').toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'})} · ${fmtH(next.hour)} · ${next.guests} guest${next.guests>1?'s':''}</small></div><button class="pill" data-pass="${next.id}">Open pass</button></div></div></div>`:''}
+
+  <div class="sec"><h2>Book in two taps <small data-go="book">See all</small></h2>
+    <div class="tiles">${Object.values(ACTS).map(a=>`<button class="tile ${a.cls}" data-act="${a.id}"><span class="ic">${a.icon}</span><span><b>${a.name}</b><small>${a.price?'from '+money(a.price):'Included'}</small></span></button>`).join('')}</div>
+  </div>
+
+  <div class="sec"><h2>Today at the resort</h2>
+    <div class="card">
+      <div class="row"><div class="badge">🧘</div><div class="grow"><b>SUP Yoga</b><small>4:00 PM · ${spotsLeft(ACTS.sup,dayKey(days[0]),16)} spots left</small></div><button class="pill" data-act="sup">Book</button></div>
+      <div class="row"><div class="badge">🤿</div><div class="grow"><b>Discover Scuba</b><small>1:00 PM · ${spotsLeft(ACTS.scuba,dayKey(days[0]),13)} spots left</small></div><button class="pill" data-act="scuba">Book</button></div>
+      <div class="row"><div class="badge">🌅</div><div class="grow"><b>Sunset soak</b><small>Last entry 7:30 PM · bring a robe</small></div><button class="pill" data-act="soak">Book</button></div>
+    </div>
+  </div>
+
+  <div class="sec"><div class="card" style="display:flex;gap:12px;align-items:center">
+    <div style="font-size:28px">💬</div><div style="flex:1"><b>Skip the phone call</b><br><small style="color:var(--muted)">Ask the concierge about gear, lessons, towels or dinner.</small></div>
+    <button class="pill" data-go="chat">Chat</button></div></div>
+  <div class="note">Concept prototype · illustrative data only</div>`;
+}
+
+/* list */
+function listView(){
+  return `<div class="top"><h1>Experiences</h1></div>
+  <div class="sec" style="padding-top:8px">
+  ${Object.values(ACTS).map(a=>`<button class="card act" data-act="${a.id}">
+    <div class="badge" style="background:${a.color}">${a.icon}</div>
+    <div style="flex:1"><b>${a.name}</b><small>${a.tag}</small></div>
+    <div class="price">${a.price?money(a.price):'Free'}</div></button>`).join('')}
+  <div class="note">Prices shown are placeholders for the demo.</div></div>`;
+}
+
+/* booking */
+function startBook(id){
+  const a=ACTS[id];
+  state.book={act:id,date:dayKey(days[0]),hour:null,guests:2,dur:a.durations[0],variant:0,addons:new Set()};
+  state.view='book';render();$('#screen').scrollTop=0;
+}
+function bookPrice(){
+  const b=state.book,a=ACTS[b.act];
+  const v=a.variants?a.variants[b.variant][1]:0;
+  const unit=Math.round((a.price*a.mult[b.dur]+v)*100)/100;
+  const add=[...b.addons].reduce((t,i)=>t+ADDONS[b.act][i][1],0);
+  return {unit,add,total:Math.max(0,(a.unit==='party'?1:b.guests)*unit)+add*(a.unit==='party'?1:b.guests)};
+}
+function bookView(){
+  const b=state.book,a=ACTS[b.act],p=bookPrice();
+  return `<div class="top"><button class="back" data-go="${state.tab}">←</button><h1>${a.name}</h1></div>
+  <div class="sec" style="padding-top:4px">
+    <small style="color:var(--muted)">${a.tag}</small>
+    <div class="lbl">Date</div>
+    <div class="seg" id="days">${days.map(d=>`<button class="${dayKey(d)===b.date?'on':''}" data-d="${dayKey(d)}">${dayLbl(d)}<small>${d.getDate()}</small></button>`).join('')}</div>
+    ${a.variants?`<div class="lbl">Option</div><div class="seg" style="flex-direction:column">${a.variants.map((v,i)=>`<button class="${b.variant===i?'on':''}" style="text-align:left" data-v="${i}">${v[0]} <small style="display:inline">· ${money(a.price+v[1])}</small></button>`).join('')}</div>`:''}
+    ${a.durations.length>1?`<div class="lbl">Duration</div><div class="seg">${a.durations.map(d=>`<button class="${b.dur===d?'on':''}" data-dur="${d}">${d} min</button>`).join('')}</div>`:''}
+    <div class="lbl">Time</div>
+    <div class="slots">${a.hours.map(h=>{const n=spotsLeft(a,b.date,h);const past=b.date===dayKey(days[0])&&h<=new Date().getHours();const off=n<b.guests||past;return `<button ${off?'disabled':''} class="${b.hour===h?'on':''}" data-h="${h}">${fmtH(h).replace(':00','')}<small>${past?'passed':n<b.guests?'full':n+' left'}</small></button>`}).join('')}</div>
+    <div class="lbl">Guests</div>
+    <div class="card"><div class="step"><span>${a.unit==='party'?'Party size':'Guests'}</span><span class="ctl"><button data-g="-1">−</button><b>${b.guests}</b><button data-g="1">+</button></span></div></div>
+    <div class="lbl">Add-ons</div>
+    <div class="card">${ADDONS[b.act].map((x,i)=>`<button class="chk ${b.addons.has(i)?'on':''}" data-a="${i}"><i>${b.addons.has(i)?'✓':''}</i><span style="flex:1">${x[0]}</span><span class="price">${x[1]?'+'+money(x[1]):'Free'}</span></button>`).join('')}</div>
+    ${b.act==='scuba'?'<p class="note" style="text-align:left;padding:10px 0 0">Gear, instructor and tank included. Health questionnaire is completed digitally after booking, no clipboard at the desk.</p>':''}
+  </div>
+  <div class="sticky"><div class="total"><span>Total · charged to room ${state.guest.room}</span><span>${money(p.total)}</span></div>
+    <button class="btn" id="confirm" ${b.hour==null?'disabled':''}>${b.hour==null?'Pick a time':'Confirm booking'}</button></div>`;
+}
+function bindBook(){
+  if(state.view!=='book')return;
+  const b=state.book;
+  const rr=()=>{const y=$('#screen').scrollTop;render();$('#screen').scrollTop=y};
+  document.querySelectorAll('[data-d]').forEach(e=>e.onclick=()=>{b.date=e.dataset.d;b.hour=null;rr()});
+  document.querySelectorAll('[data-v]').forEach(e=>e.onclick=()=>{b.variant=+e.dataset.v;rr()});
+  document.querySelectorAll('[data-dur]').forEach(e=>e.onclick=()=>{b.dur=+e.dataset.dur;rr()});
+  document.querySelectorAll('[data-h]').forEach(e=>e.onclick=()=>{b.hour=+e.dataset.h;rr()});
+  document.querySelectorAll('[data-g]').forEach(e=>e.onclick=()=>{b.guests=Math.min(10,Math.max(1,b.guests+ +e.dataset.g));if(b.hour!=null&&spotsLeft(ACTS[b.act],b.date,b.hour)<b.guests)b.hour=null;rr()});
+  document.querySelectorAll('[data-a]').forEach(e=>e.onclick=()=>{const i=+e.dataset.a;b.addons.has(i)?b.addons.delete(i):b.addons.add(i);rr()});
+  const c=$('#confirm');if(c)c.onclick=confirmBook;
+}
+function confirmBook(){
+  const b=state.book,a=ACTS[b.act],p=bookPrice();
+  const plan={id:'HS'+Math.random().toString(36).slice(2,7).toUpperCase(),act:b.act,date:b.date,hour:b.hour,guests:b.guests,dur:b.dur,
+    variant:a.variants?a.variants[b.variant][0]:null,addons:[...b.addons].map(i=>ADDONS[b.act][i][0]),total:p.total};
+  state.plans.push(plan);save();
+  state.view=null;state.tab='plans';state.pass=plan.id;render();
+  toast('Booked! Added to room '+state.guest.room+' · confirmation sent');
+}
+
+/* plans */
+function qrSvg(seed){
+  let s=0;for(const c of seed)s=(s*131+c.charCodeAt(0))>>>0;
+  const n=11;let r='';
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){
+    const corner=(x<3&&y<3)||(x>n-4&&y<3)||(x<3&&y>n-4);
+    s=(s*1103515245+12345)>>>0;
+    if(corner||(s>>16)&1)r+=`<rect x="${x}" y="${y}" width="1" height="1"/>`;
+  }
+  return `<svg class="qr" viewBox="0 0 ${n} ${n}" fill="#0f3b3a">${r}</svg>`;
+}
+function plansView(){
+  if(!state.plans.length)return `<div class="top"><h1>My Plans</h1></div><div class="empty"><div class="big">🎟️</div><p>No bookings yet.<br>Reserve a soak, dive or yoga session in a few taps.</p><div style="max-width:220px;margin:auto"><button class="btn" data-go="book">Browse experiences</button></div></div>`;
+  const sorted=state.plans.slice().sort((a,b)=>(a.date+String(a.hour).padStart(2,'0')).localeCompare(b.date+String(b.hour).padStart(2,'0')));
+  return `<div class="top"><h1>My Plans</h1></div><div class="sec" style="padding-top:8px">
+  ${sorted.map(p=>{const a=ACTS[p.act];const open=state.pass===p.id;
+    const when=new Date(p.date+'T12:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+    return open?`<div class="pass"><span class="x" data-pass="">close</span><div class="brand" style="font-size:10px;letter-spacing:2px">DIGITAL PASS</div><h3>${a.icon} ${a.name}</h3>
+      <div class="meta"><div><small>When</small><b>${when}</b><b>${fmtH(p.hour)}</b></div><div><small>Guests</small><b>${p.guests}</b></div><div><small>Length</small><b>${p.dur} min</b></div></div>
+      <div class="qrline">${qrSvg(p.id)}<div><b>${p.id}</b><br><small>Scan at the crater tunnel · no check-in desk${p.variant?'<br>'+p.variant:''}</small></div></div></div>
+      <button class="btn alt" style="margin:-4px 0 14px" data-cancel="${p.id}">Cancel booking</button>`
+    :`<div class="card" style="margin-bottom:10px"><div class="row" style="padding:0;border:0"><div class="badge">${a.icon}</div><div class="grow"><b>${a.name}</b><small>${when} · ${fmtH(p.hour)} · ${p.guests} guest${p.guests>1?'s':''}</small></div><button class="pill" data-pass="${p.id}">Pass</button></div></div>`}).join('')}
+  </div>`;
+}
+
+/* concierge chat (scripted for the demo; production = LLM + resort knowledge base + booking tools) */
+const KB=[
+  [/scuba|dive|diving|certif|padi/i,()=>({t:"Crater diving is warm water (about 90°F) and 65 ft deep, so no thick wetsuit. We have Discover Scuba for first timers, a half-day for certified divers, and the full PADI Open Water over two days. All gear is included.",a:[['Book scuba','act:scuba']]})],
+  [/soak|hot ?spring|crater|swim|snorkel/i,()=>({t:"The crater is 90–96°F year round. You walk in through a 110 ft tunnel into the dome. Sessions are 60 or 90 minutes. Snorkel sets and towels are add-ons, and kids are welcome.",a:[['Book a soak','act:soak']]})],
+  [/yoga|sup|paddle/i,()=>({t:"SUP Yoga is held inside the crater, on the water. No experience needed, boards and mats are provided. Classes run at 8, 10, 4 and 6.",a:[['Book SUP Yoga','act:sup']]})],
+  [/pool|cabana|winter|cold/i,()=>({t:"The outdoor pools are heated and open year-round. Cabanas can be reserved and have poolside food service.",a:[['Reserve a cabana','act:pool']]})],
+  [/towel|robe|locker|bring|wear|swimsuit/i,()=>({t:"Bring a swimsuit and sandals. Towels and lockers are available at the crater for $6, and your room robe is welcome on the walk over. I can add a towel to any booking."})],
+  [/kid|child|age|family/i,()=>({t:"Kids are welcome in the soak and pools. Scuba starts at age 10 for Discover, 10+ for Junior Open Water. SUP Yoga is best for ages 8+."})],
+  [/dinner|eat|food|restaurant|hungry|lunch|breakfast/i,()=>({t:"Poolside food service runs 11–7. For dinner I'd suggest booking a table after your soak, since you'll be hungry. (In production this connects to the dining reservation system.)"})],
+  [/cancel|change|reschedule/i,()=>({t:"You can cancel any booking from My Plans, free up to 4 hours before.",a:[['Open My Plans','go:plans']]})],
+  [/hour|open|close|when/i,()=>({t:"The crater is open 9 AM – 8 PM daily, last entry 7:30. The pools are open 10 AM – 8 PM."})],
+  [/call|human|person|front desk|staff/i,()=>({t:"Of course. I've flagged this for the concierge team and they'll message you within a few minutes. Dial 0 from your room phone for anything urgent."})],
+];
+const SUGGEST=["What should I bring to the crater?","How does scuba work?","Is the pool open in winter?","Anything for kids?","Talk to a person"];
+function chatView(){return `<div class="chat" style="height:100%"><div class="top" style="padding-bottom:8px"><h1>Concierge</h1><span class="pill" style="margin-left:auto">● Online 24/7</span></div><div class="msgs" id="msgs"></div><div class="suggest" id="sugg">${SUGGEST.map(s=>`<button>${s}</button>`).join('')}</div><form class="compose" id="f"><input id="inp" placeholder="Ask anything…" autocomplete="off"><button>➤</button></form></div>`}
+function chatInit(){
+  const s=$('#screen');s.style.overflow='hidden';
+  if(!state.msgs.length)state.msgs.push({r:'bot',t:`Hi ${state.guest.name}! I can answer questions and book the crater, scuba, yoga and pools right here. What sounds good?`});
+  paintMsgs();
+  $('#f').onsubmit=e=>{e.preventDefault();const v=$('#inp').value.trim();if(v){$('#inp').value='';ask(v)}};
+  document.querySelectorAll('#sugg button').forEach(b=>b.onclick=()=>ask(b.textContent));
+}
+function paintMsgs(typing){
+  const m=$('#msgs');if(!m)return;
+  m.innerHTML=state.msgs.map(x=>`<div class="m ${x.r}">${x.t.replace(/</g,'&lt;')}${x.a?`<div class="acts">${x.a.map(a=>`<button data-x="${a[1]}">${a[0]}</button>`).join('')}</div>`:''}</div>`).join('')+(typing?'<div class="m bot typing"><span></span><span></span><span></span></div>':'');
+  m.scrollTop=m.scrollHeight;
+  m.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>{const [k,v]=b.dataset.x.split(':');$('#screen').style.overflow='';k==='act'?startBook(v):go(v)});
+}
+function ask(q){
+  state.msgs.push({r:'me',t:q});paintMsgs(true);
+  const hit=KB.find(k=>k[0].test(q));
+  const r=hit?hit[1]():{t:"Good question. I'll check with the team and follow up here shortly. In the meantime I can book activities or tell you about the crater, scuba, yoga and pools."};
+  setTimeout(()=>{state.msgs.push({r:'bot',t:r.t,a:r.a});paintMsgs()},700);
+}
+
+/* leave chat → restore scroll */
+const _go=go;go=function(t){const s=$('#screen');if(s)s.style.overflow='';_go(t)};
+render();
+document.querySelectorAll('[data-demo]').forEach(b=>b.onclick=()=>{const d=b.dataset.demo;if(d==='scuba'){state.tab='book';startBook('scuba')}else go(d)});
+</script>
+</body>
+</html>
