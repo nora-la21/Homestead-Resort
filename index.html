@@ -190,10 +190,10 @@ h1,h2,h3{font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;margin:0
 <script>
 /* ---------- Data (illustrative, replace with resort PMS / booking system) ---------- */
 const ACTS = {
-  soak:  {id:'soak',  name:'Crater Soak & Swim', icon:'♨️', cls:'t-soak',  color:'#3f6b5c', tag:'90°–96°F geothermal water inside the limestone dome', price:25, unit:'person', durations:[60,90], mult:{60:1,90:1.5}, cap:18, hours:[9,10,11,12,13,14,15,16,17,18,19,20]},
+  soak:  {id:'soak',  name:'Crater Soak & Swim', icon:'♨️', cls:'t-soak',  color:'#3f6b5c', tag:'90°–96°F geothermal water inside the limestone dome', price:25, unit:'person', durations:[60,90], mult:{60:1,90:1.5}, cap:18, kidsFree:true, hours:[9,10,11,12,13,14,15,16,17,18,19,20]},
   scuba: {id:'scuba', name:'Crater Scuba',       icon:'🤿', cls:'t-scuba', color:'#46697f', tag:'Warm-water dives, 65 ft deep. Discover or certify.', price:125, unit:'diver', durations:[90], mult:{90:1}, cap:6, hours:[9,11,13,15], variants:[['Discover Scuba (no experience)',0],['Certified diver',-30],['Full PADI Open Water (2 days)',270]]},
   sup:   {id:'sup',   name:'SUP Yoga in the Crater', icon:'🧘', cls:'t-sup', color:'#b08d57', tag:'Paddleboard yoga, steam and skylight above.', price:45, unit:'person', durations:[60], mult:{60:1}, cap:10, hours:[8,10,16,18]},
-  pool:  {id:'pool',  name:'Heated Outdoor Pools', icon:'🏊', cls:'t-pool', color:'#5a8f94', tag:'Open year-round. Reserve a cabana or poolside table.', price:0, unit:'party', durations:[120], mult:{120:1}, cap:30, hours:[10,12,14,16,18], variants:[['Pool access (included w/ stay)',0],['Poolside cabana',60],['Private family cabana',95]]},
+  pool:  {id:'pool',  name:'Heated Outdoor Pools', icon:'🏊', cls:'t-pool', color:'#5a8f94', tag:'Open year-round. Reserve a cabana or poolside table.', price:0, unit:'party', durations:[120], mult:{120:1}, cap:30, kidsFree:true, hours:[10,12,14,16,18], variants:[['Pool access (included w/ stay)',0],['Poolside cabana',60],['Private family cabana',95]]},
   golf:  {id:'golf',  name:'Homestead Golf Course', icon:'⛳', cls:'t-golf', color:'#5b7d4a', tag:'Redesigned 18-hole course by John Fought. Reopens July 2027.', price:95, unit:'player', durations:[240], mult:{240:1}, cap:16, hours:[8,10,12,14], soon:'July 2027'},
   pickle:{id:'pickle',name:'Pickleball Courts', icon:'🏓', cls:'t-golf', color:'#5b7d4a', tag:'Six courts on property. Paddles and balls at the desk.', price:20, unit:'party', durations:[60,90], mult:{60:1,90:1.5}, cap:6, hours:[8,9,10,11,12,13,14,15,16,17,18]},
   spa:   {id:'spa',   name:'Homestead Spa', icon:'💆', cls:'t-spa', color:'#8a5a6a', tag:'Massage, body and nail services. Couples suites available.', price:140, unit:'guest', durations:[50,80], mult:{50:1,80:1.5}, cap:4, hours:[9,11,13,15,17], variants:[['Massage',0],['Couples massage',60],['Body treatment',20],['Nail services',-80]]},
@@ -285,7 +285,7 @@ function homeView(){
   </div>
 
   ${next?`<div class="sec"><h2>Up next</h2>
-    <div class="card"><div class="row"><div class="badge">${ACTS[next.act].icon}</div><div class="grow"><b>${ACTS[next.act].name}</b><small>${new Date(next.date+'T12:00').toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'})} · ${fmtH(next.hour)} · ${next.guests} guest${next.guests>1?'s':''}</small></div><button class="pill" data-pass="${next.id}">Open pass</button></div></div></div>`:''}
+    <div class="card"><div class="row"><div class="badge">${ACTS[next.act].icon}</div><div class="grow"><b>${ACTS[next.act].name}</b><small>${new Date(next.date+'T12:00').toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'})} · ${fmtH(next.hour)} · ${next.guests} guest${next.guests>1?'s':''}${next.tots?' + '+next.tots+' under 4':''}</small></div><button class="pill" data-pass="${next.id}">Open pass</button></div></div></div>`:''}
 
   <div class="sec"><h2>Everything at Homestead <small data-go="book">See all 12</small></h2>
     <div class="tiles">${['soak','scuba','golf','spa','dine','adv'].map(i=>ACTS[i]).map(a=>`<button class="tile ${a.cls}" data-act="${a.id}"><span class="ic">${a.icon}</span><span><b>${a.name}</b><small>${a.soon?'Reopens '+a.soon:a.id==='dine'?'3 restaurants':a.price?'from '+money(a.price):'Included'}</small></span></button>`).join('')}</div>
@@ -320,7 +320,7 @@ function listView(){
 /* booking */
 function startBook(id){
   const a=ACTS[id];
-  state.book={act:id,date:dayKey(days[0]),hour:null,guests:2,dur:a.durations[0],variant:0,addons:new Set()};
+  state.book={act:id,date:dayKey(days[0]),hour:null,guests:2,tots:0,dur:a.durations[0],variant:0,addons:new Set()};
   state.view='book';render();$('#screen').scrollTop=0;
 }
 function bookPrice(){
@@ -347,7 +347,8 @@ function bookView(){
     <div class="lbl">Time</div>
     <div class="slots">${a.hours.map(h=>{const n=spotsLeft(a,b.date,h);const past=b.date===dayKey(days[0])&&h<=new Date().getHours();const off=n<b.guests||past;return `<button ${off?'disabled':''} class="${b.hour===h?'on':''}" data-h="${h}">${fmtH(h).replace(':00','')}<small>${past?'passed':n<b.guests?'full':n+' left'}</small></button>`}).join('')}</div>
     <div class="lbl">Guests</div>
-    <div class="card"><div class="step"><span>${a.unit==='party'?'Party size':'Guests'}</span><span class="ctl"><button data-g="-1">−</button><b>${b.guests}</b><button data-g="1">+</button></span></div></div>
+    <div class="card"><div class="step"><span>${a.kidsFree?'Guests (age 4 and up)':a.unit==='party'?'Party size':'Guests'}</span><span class="ctl"><button data-g="-1">−</button><b>${b.guests}</b><button data-g="1">+</button></span></div>
+    ${a.kidsFree?`<div class="step" style="border-top:1px solid var(--line)"><span>Children under 4 <span class="pill">Free</span></span><span class="ctl"><button data-t="-1">−</button><b>${b.tots}</b><button data-t="1">+</button></span></div>`:''}</div>
     <div class="lbl">Add-ons</div>
     <div class="card">${ADDONS[b.act].map((x,i)=>`<button class="chk ${b.addons.has(i)?'on':''}" data-a="${i}"><i>${b.addons.has(i)?'✓':''}</i><span style="flex:1">${x[0]}</span><span class="price">${x[1]?'+'+money(x[1]):'Free'}</span></button>`).join('')}</div>
     ${b.act==='scuba'?'<p class="note" style="text-align:left;padding:10px 0 0">Gear, instructor and tank included. Health questionnaire is completed digitally after booking, no clipboard at the desk.</p>':''}
@@ -365,12 +366,13 @@ function bindBook(){
   document.querySelectorAll('[data-dur]').forEach(e=>e.onclick=()=>{b.dur=+e.dataset.dur;rr()});
   document.querySelectorAll('[data-h]').forEach(e=>e.onclick=()=>{b.hour=+e.dataset.h;rr()});
   document.querySelectorAll('[data-g]').forEach(e=>e.onclick=()=>{b.guests=Math.min(10,Math.max(1,b.guests+ +e.dataset.g));if(b.hour!=null&&spotsLeft(ACTS[b.act],b.date,b.hour)<b.guests)b.hour=null;rr()});
+  document.querySelectorAll('[data-t]').forEach(e=>e.onclick=()=>{b.tots=Math.min(6,Math.max(0,b.tots+ +e.dataset.t));rr()});
   document.querySelectorAll('[data-a]').forEach(e=>e.onclick=()=>{const i=+e.dataset.a;b.addons.has(i)?b.addons.delete(i):b.addons.add(i);rr()});
   const c=$('#confirm');if(c)c.onclick=confirmBook;
 }
 function confirmBook(){
   const b=state.book,a=ACTS[b.act],p=bookPrice();
-  const plan={id:'HS'+Math.random().toString(36).slice(2,7).toUpperCase(),act:b.act,date:b.date,hour:b.hour,guests:b.guests,dur:b.dur,
+  const plan={id:'HS'+Math.random().toString(36).slice(2,7).toUpperCase(),act:b.act,date:b.date,hour:b.hour,guests:b.guests,tots:b.tots,dur:b.dur,
     variant:a.variants?a.variants[b.variant][0]:null,addons:[...b.addons].map(i=>ADDONS[b.act][i][0]),total:p.total};
   state.plans.push(plan);save();
   state.view=null;state.tab='plans';state.pass=plan.id;render();
@@ -395,10 +397,10 @@ function plansView(){
   ${sorted.map(p=>{const a=ACTS[p.act];const open=state.pass===p.id;
     const when=new Date(p.date+'T12:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
     return open?`<div class="pass"><span class="x" data-pass="">close</span><div class="brand" style="font-size:10px;letter-spacing:2px">DIGITAL PASS</div><h3>${a.icon} ${a.name}</h3>
-      <div class="meta"><div><small>When</small><b>${when}</b><b>${fmtH(p.hour)}</b></div><div><small>Guests</small><b>${p.guests}</b></div><div><small>Length</small><b>${p.dur} min</b></div></div>
+      <div class="meta"><div><small>When</small><b>${when}</b><b>${fmtH(p.hour)}</b></div><div><small>Guests</small><b>${p.guests}${p.tots?' + '+p.tots+' under 4':''}</b></div><div><small>Length</small><b>${p.dur} min</b></div></div>
       <div class="qrline">${qrSvg(p.id)}<div><b>${p.id}</b><br><small>Scan at the crater tunnel · no check-in desk${p.variant?'<br>'+p.variant:''}</small></div></div></div>
       <button class="btn alt" style="margin:-4px 0 14px" data-cancel="${p.id}">Cancel booking</button>`
-    :`<div class="card" style="margin-bottom:10px"><div class="row" style="padding:0;border:0"><div class="badge">${a.icon}</div><div class="grow"><b>${a.name}</b><small>${when} · ${fmtH(p.hour)} · ${p.guests} guest${p.guests>1?'s':''}</small></div><button class="pill" data-pass="${p.id}">Pass</button></div></div>`}).join('')}
+    :`<div class="card" style="margin-bottom:10px"><div class="row" style="padding:0;border:0"><div class="badge">${a.icon}</div><div class="grow"><b>${a.name}</b><small>${when} · ${fmtH(p.hour)} · ${p.guests} guest${p.guests>1?'s':''}${p.tots?' + '+p.tots+' under 4':''}</small></div><button class="pill" data-pass="${p.id}">Pass</button></div></div>`}).join('')}
   </div>`;
 }
 
@@ -414,7 +416,7 @@ const KB=[
   [/yoga|sup|paddle/i,()=>({t:"SUP Yoga is held inside the crater, on the water. No experience needed, boards and mats are provided. Classes run at 8, 10, 4 and 6.",a:[['Book SUP Yoga','act:sup']]})],
   [/pool|cabana|winter|cold/i,()=>({t:"The outdoor pools are heated and open year-round. Cabanas can be reserved and have poolside food service.",a:[['Reserve a cabana','act:pool']]})],
   [/towel|robe|locker|bring|wear|swimsuit/i,()=>({t:"Bring a swimsuit and sandals. Towels and lockers are available at the crater for $6, and your room robe is welcome on the walk over. I can add a towel to any booking."})],
-  [/kid|child|age|family/i,()=>({t:"Kids are welcome in the soak and pools. Scuba starts at age 10 for Discover, 10+ for Junior Open Water. SUP Yoga is best for ages 8+."})],
+  [/kid|child|age|family|toddler|baby|free/i,()=>({t:"Children under 4 are free in the crater and the pools. Add them to your booking and they won't be charged. Kids are welcome in the soak and pools. Scuba starts at age 10 for Discover, 10+ for Junior Open Water. SUP Yoga is best for ages 8+."})],
   [/dinner|eat|food|restaurant|hungry|lunch|breakfast|coffee|simon|milk/i,()=>({t:"You have three choices: Simon's, 1886 Grill & Smokehouse, and The Milk House for coffee, pastries and ice cream. Book a table after your soak, you'll be hungry.",a:[['Reserve a table','act:dine']]})],
   [/cancel|change|reschedule/i,()=>({t:"You can cancel any booking from My Plans, free up to 4 hours before.",a:[['Open My Plans','go:plans']]})],
   [/hour|open|close|when/i,()=>({t:"The crater is open 9 AM – 8 PM daily, last entry 7:30. The pools are open 10 AM – 8 PM."})],
