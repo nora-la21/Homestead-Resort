@@ -171,6 +171,7 @@ h1,h2,h3{font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;margin:0
 .fl{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
 .fi{width:100%;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:11px 12px;font:inherit;margin-bottom:6px;outline:none}
 .fi:focus{border-color:var(--teal)}
+.rq{display:flex;align-items:center;gap:10px;padding:12px;text-align:left}
 .toast{position:absolute;left:16px;right:16px;bottom:78px;background:var(--deep);color:#fff;padding:12px 14px;border-radius:14px;box-shadow:var(--shadow);transform:translateY(20px);opacity:0;pointer-events:none;transition:.25s;z-index:9}
 .toast.show{transform:none;opacity:1}
 .note{font-size:11px;color:var(--muted);text-align:center;padding:18px 24px 6px}
@@ -190,6 +191,7 @@ h1,h2,h3{font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;margin:0
     <li><button data-demo="pay"><b>Check out</b><span>Room charge, saved card or wallet</span></button></li>
     <li><button data-demo="plans"><b>Show the pass</b><span>QR entry at the crater tunnel</span></button></li>
     <li><button data-demo="spa"><b>Reserve dinner or the spa</b><span>Restaurants, treatments and adventures in the same flow</span></button></li>
+    <li><button data-demo="stay"><b>Manage the stay</b><span>Room service, housekeeping, digital key</span></button></li>
     <li><button data-demo="chat"><b>Ask the concierge</b><span>Answers gear and kids questions, books for you</span></button></li>
   </ol>
   <p class="fine">Activity list based on Homestead's public information. Prices and availability are illustrative. In production this connects to the resort's reservation and room-billing systems, and the concierge answers from the resort's own knowledge base.</p>
@@ -227,7 +229,7 @@ const ADDONS = {
 const BOOKED = {}; // pseudo-random availability seeded by day+slot
 
 const state = {
-  tab:'home', view:null, plans:load('plans',[]), msgs:[], book:null, pass:null, notify:new Set(), guest:{name:'Alex', room:'214', stay:'Oct 5 – Oct 8'}
+  tab:'home', view:null, reqs:[], dnd:false, rs:null, plans:load('plans',[]), msgs:[], book:null, pass:null, notify:new Set(), guest:{name:'Alex', room:'214', stay:'Oct 5 – Oct 8'}
 };
 function load(k,d){try{return JSON.parse(localStorage.getItem('hs_'+k))??d}catch(e){return d}}
 function save(){try{localStorage.setItem('hs_plans',JSON.stringify(state.plans))}catch(e){}}
@@ -247,7 +249,7 @@ function spotsLeft(a,dKey,h){
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('show'),2600)}
 
 /* ---------- Render ---------- */
-const TABS=[['home','🏠','Home'],['book','📅','Book'],['plans','🎟️','My Plans'],['chat','💬','Concierge']];
+const TABS=[['home','🏠','Home'],['book','📅','Book'],['stay','🛎️','My Stay'],['plans','🎟️','My Plans'],['chat','💬','Concierge']];
 function renderTabs(){
   $('#tabs').innerHTML=TABS.map(([k,i,l])=>`<button class="${state.tab===k&&!state.view?'on':''}" data-tab="${k}"><span class="i">${i}</span>${l}${k==='plans'&&state.plans.length?`<span class="dot">${state.plans.length}</span>`:''}</button>`).join('');
   document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>go(b.dataset.tab));
@@ -256,10 +258,12 @@ function go(tab){state.tab=tab;state.view=null;state.book=null;render();$('#scre
 function render(){
   renderTabs();
   const s=$('#screen');
-  if(state.view==='pay')s.innerHTML=payView();
+  if(state.view==='rs')s.innerHTML=rsView();
+  else if(state.view==='pay')s.innerHTML=payView();
   else if(state.view==='book')s.innerHTML=bookView();
   else if(state.tab==='home')s.innerHTML=homeView();
   else if(state.tab==='book')s.innerHTML=listView();
+  else if(state.tab==='stay')s.innerHTML=stayView();
   else if(state.tab==='plans')s.innerHTML=plansView();
   else if(state.tab==='chat'){s.innerHTML=chatView();chatInit();return}
   bind();
@@ -269,7 +273,7 @@ function bind(){
   document.querySelectorAll('[data-act]').forEach(b=>b.onclick=e=>{e.preventDefault();startBook(b.dataset.act)});
   document.querySelectorAll('[data-pass]').forEach(b=>b.onclick=()=>{state.pass=b.dataset.pass;state.tab='plans';state.view=null;render()});
   document.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=()=>{state.plans=state.plans.filter(p=>p.id!==b.dataset.cancel);save();toast('Booking cancelled. No fee.');render()});
-  bindBook();bindPay();
+  bindBook();bindPay();bindStay();
 }
 
 /* home */
@@ -314,7 +318,9 @@ function homeView(){
     </div>
   </div>
 
-  <div class="sec"><div class="card" style="display:flex;gap:12px;align-items:center">
+  <div class="sec"><div class="card" style="display:flex;gap:12px;align-items:center;margin-bottom:10px">
+    <div style="font-size:28px">🛎️</div><div style="flex:1"><b>Room service &amp; housekeeping</b><br><small style="color:var(--muted)">Order food, ask for towels, set do not disturb.</small></div><button class="pill" data-go="stay">Open</button></div>
+    <div class="card" style="display:flex;gap:12px;align-items:center">
     <div style="font-size:28px">💬</div><div style="flex:1"><b>Skip the phone call</b><br><small style="color:var(--muted)">Ask the concierge about gear, lessons, towels or dinner.</small></div>
     <button class="pill" data-go="chat">Chat</button></div></div>
   <div class="note">Concept prototype · illustrative data only</div>`;
@@ -436,6 +442,67 @@ function bindPay(){
   $('#paynow').onclick=()=>{pay.busy=true;rr();setTimeout(finishBook,1300)};
 }
 
+/* stay: room, room service, requests */
+const MENU=[['Breakfast',[['Buttermilk pancakes',14],['Farm eggs your way',16],['Granola & yogurt',10]]],['Mains',[['Smokehouse burger',21],['Roasted chicken',26],['Garden salad',14]]],['Sweets & drinks',[['Hot cocoa',5],['Fresh-baked cookies',8],['Coffee press',7]]]];
+const REQS=[['🧺','Extra towels'],['🛏️','Fresh linens'],['🛌','Extra pillows'],['🌙','Turndown service'],['🪥','Toiletries kit'],['⏰','Wake-up call'],['🔧','Maintenance'],['🕛','Late checkout']];
+const ST=['Received','In progress','Done'];
+function addReq(icon,t){
+  const r={id:Date.now()+Math.random(),icon,t,st:0};state.reqs.unshift(r);
+  const adv=n=>setTimeout(()=>{r.st=n;if(state.tab==='stay'&&!state.view)stayRefresh()},n===1?4000:11000);adv(1);adv(2);
+}
+function stayRefresh(){const y=$('#screen').scrollTop;render();$('#screen').scrollTop=y}
+function stayView(){
+  const open=state.reqs.filter(r=>r.st<2).length;
+  return `<div class="top"><h1>My Stay</h1></div>
+  <div class="sec" style="padding-top:8px">
+    <div class="pass" style="margin-bottom:14px"><div class="brand" style="font-size:10px;letter-spacing:2px">ROOM ${state.guest.room}</div><h3 style="font-size:26px;margin-top:4px">King Room</h3>
+      <div class="meta" style="margin-bottom:0"><div><small>Check-in</small><b>Oct 5 · 4 PM</b></div><div><small>Check-out</small><b>Oct 8 · 11 AM</b></div></div>
+      <div style="display:flex;gap:8px;margin-top:14px"><button class="pill" id="key" style="flex:1;padding:9px">🔑 Digital key</button><button class="pill" id="dnd" style="flex:1;padding:9px">${state.dnd?'🔕 Do not disturb: on':'🔔 Do not disturb: off'}</button></div></div>
+
+    <div class="card" style="display:flex;gap:12px;align-items:center;margin-bottom:12px"><div class="badge" style="width:48px;height:48px;border-radius:10px;background:var(--mint);display:grid;place-items:center;font-size:24px">🍽️</div>
+      <div style="flex:1"><b>In-room dining</b><small style="display:block;color:var(--muted)">Ordered to your door, about 35 min. Charged to the room.</small></div><button class="pill" data-rs="1">Order</button></div>
+
+    <h2 style="font-size:24px;margin:18px 0 8px">Housekeeping &amp; requests</h2>
+    <div class="tiles" style="grid-template-columns:1fr 1fr">${REQS.map((r,i)=>`<button class="card rq" data-rq="${i}"><span style="font-size:22px">${r[0]}</span><b style="font-size:14px">${r[1]}</b></button>`).join('')}</div>
+
+    <h2 style="font-size:24px;margin:20px 0 8px">Your requests ${open?`<span class="pill warn" style="font:700 11px Lato,sans-serif;vertical-align:middle">${open} open</span>`:''}</h2>
+    ${state.reqs.length?`<div class="card">${state.reqs.map(r=>`<div class="row"><div class="badge">${r.icon}</div><div class="grow"><b>${r.t}</b><small>${r.st===2?'Completed':'Staff notified'}</small></div><span class="pill ${r.st<2?'warn':''}">${ST[r.st]}</span></div>`).join('')}</div>`:`<div class="card"><small style="color:var(--muted)">Nothing yet. Tap a request above and it goes straight to the front desk and housekeeping.</small></div>`}
+
+    <h2 style="font-size:24px;margin:20px 0 8px">Good to know</h2>
+    <div class="card">
+      <div class="row"><div class="badge">📶</div><div class="grow"><b>Wi-Fi</b><small>Network: Homestead Guest · Password: crater214</small></div></div>
+      <div class="row"><div class="badge">🕙</div><div class="grow"><b>Quiet hours</b><small>10 PM – 7 AM</small></div></div>
+      <div class="row"><div class="badge">🔥</div><div class="grow"><b>Fire pits</b><small>Open evenings by the pools</small></div></div>
+    </div>
+    <div class="note">Sample details for the demo</div>
+  </div>`;
+}
+function rsView(){
+  const r=state.rs,items=Object.entries(r.cart).filter(([,q])=>q>0);
+  const sub=items.reduce((t,[k,q])=>t+q*price(k),0),fee=sub?4:0,tax=Math.round(sub*TAX*100)/100,tot=sub+fee+tax;
+  return `<div class="top"><button class="back" data-go="stay">←</button><h1>In-room dining</h1></div>
+  <div class="sec" style="padding-top:4px"><small style="color:var(--muted)">Sample menu · delivered to room ${state.guest.room}</small>
+  ${MENU.map(([c,its])=>`<div class="lbl">${c}</div><div class="card">${its.map(([n,p])=>`<div class="step"><span style="flex:1">${n}<br><span class="price">${money(p)}</span></span><span class="ctl"><button data-q="${n}|-1">−</button><b>${r.cart[n]||0}</b><button data-q="${n}|1">+</button></span></div>`).join('')}</div>`).join('')}
+  <div class="lbl">Delivery</div><div class="seg">${[['asap','ASAP · ~35 min'],['7:30','7:30 PM'],['8:00','8:00 PM']].map(([k,l])=>`<button class="${r.when===k?'on':''}" data-w="${k}">${l}</button>`).join('')}</div>
+  <label class="fl" for="rnote">Note for the kitchen</label><input class="fi" id="rnote" placeholder="Allergies, no onions…" value="${r.note.replace(/"/g,'&quot;')}">
+  </div>
+  <div class="sticky">${sub?`<div class="ln"><span>Subtotal ${money(sub)} · Delivery ${money(fee)} · Tax ${money(tax)}</span></div>`:''}<div class="total"><span>Charged to room ${state.guest.room}</span><span>${money(tot)}</span></div>
+  <button class="btn" id="place" ${sub?'':'disabled'}>${sub?'Place order':'Add items'}</button></div>`;
+}
+const price=n=>MENU.flatMap(m=>m[1]).find(i=>i[0]===n)[1];
+function bindStay(){
+  document.querySelectorAll('[data-rs]').forEach(b=>b.onclick=()=>{state.rs={cart:{},when:'asap',note:''};state.view='rs';render();$('#screen').scrollTop=0});
+  document.querySelectorAll('[data-rq]').forEach(b=>b.onclick=()=>{const r=REQS[+b.dataset.rq];addReq(r[0],r[1]);toast(r[1]+' requested. Staff notified.');stayRefresh()});
+  const k=$('#key');if(k)k.onclick=()=>toast('Hold your phone near the door lock to open it.');
+  const d=$('#dnd');if(d)d.onclick=()=>{state.dnd=!state.dnd;toast(state.dnd?'Housekeeping will skip your room.':'Do not disturb is off.');stayRefresh()};
+  if(state.view!=='rs')return;
+  const r=state.rs,rr=()=>{const y=$('#screen').scrollTop;render();$('#screen').scrollTop=y};
+  $('#rnote').oninput=e=>{r.note=e.target.value};
+  document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{const [n,d]=b.dataset.q.split('|');r.cart[n]=Math.max(0,(r.cart[n]||0)+ +d);rr()});
+  document.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>{r.when=b.dataset.w;rr()});
+  const p=$('#place');if(p)p.onclick=()=>{const n=Object.values(r.cart).reduce((a,b)=>a+b,0);addReq('🍽️','Room service · '+n+' item'+(n>1?'s':'')+(r.when==='asap'?' · ASAP':' · '+r.when+' PM'));state.view=null;state.tab='stay';state.rs=null;render();toast('Order placed. Charged to room '+state.guest.room+'.')};
+}
+
 /* plans */
 function qrSvg(seed){
   let s=0;for(const c of seed)s=(s*131+c.charCodeAt(0))>>>0;
@@ -463,6 +530,10 @@ function plansView(){
 
 /* concierge chat (scripted for the demo; production = LLM + resort knowledge base + booking tools) */
 const KB=[
+  [/room service|in-room|order food|food to my room/i,()=>({t:"You can order to your room from the My Stay tab. Delivery takes about 35 minutes and it's charged to the room.",a:[['Order room service','go:stay']]})],
+  [/towel|housekeep|pillow|linen|clean|turndown/i,()=>({t:"Tap the request in My Stay and housekeeping gets it right away. You can follow its status there.",a:[['Open My Stay','go:stay']]})],
+  [/wi-?fi|internet|password/i,()=>({t:"Network: Homestead Guest, password: crater214. (Sample details for the demo.)"})],
+  [/check.?out|late|key/i,()=>({t:"Check-out is 11 AM. You can request a late check-out in My Stay, subject to availability, and your phone works as the room key.",a:[['Open My Stay','go:stay']]})],
   [/golf|tee|course/i,()=>({t:"The Homestead Golf Course is being redesigned by John Fought and reopens in July 2027. I can put you on the list for early tee time access.",a:[['Notify me','act:golf']]})],
   [/spa|massage|nail|couples/i,()=>({t:"The spa offers massage, body and nail services, plus couples suites. A 50-minute massage is a good fit after a crater soak.",a:[['Book the spa','act:spa']]})],
   [/pickle|court|tennis/i,()=>({t:"There are six pickleball courts on property. Paddle and ball rentals are at the desk, or add them to your booking.",a:[['Reserve a court','act:pickle']]})],
@@ -472,7 +543,7 @@ const KB=[
   [/soak|hot ?spring|crater|swim|snorkel/i,()=>({t:"The crater is 90–96°F year round. You walk in through a 110 ft tunnel into the dome. Sessions are 60 or 90 minutes. Snorkel sets and towels are add-ons, and kids are welcome.",a:[['Book a soak','act:soak']]})],
   [/yoga|sup|paddle/i,()=>({t:"SUP Yoga is held inside the crater, on the water. No experience needed, boards and mats are provided. Classes run at 8, 10, 4 and 6.",a:[['Book SUP Yoga','act:sup']]})],
   [/pool|winter|cold/i,()=>({t:"The outdoor pools are heated and open year-round. A full day pass starts at $75, and children 2 and under are free.",a:[['Book a pool day','act:pool']]})],
-  [/towel|robe|locker|bring|wear|swimsuit/i,()=>({t:"Bring a swimsuit and sandals. Towels and lockers are available at the crater for $6, and your room robe is welcome on the walk over. I can add a towel to any booking."})],
+  [/robe|locker|bring|wear|swimsuit/i,()=>({t:"Bring a swimsuit and sandals. Towels and lockers are available at the crater for $6, and your room robe is welcome on the walk over. I can add a towel to any booking."})],
   [/kid|child|age|family|toddler|baby|free/i,()=>({t:"Children 2 and under are free at the outdoor pool. Add them to your booking and they won't be charged. Kids are welcome in the soak and pools. Scuba starts at age 10 for Discover, 10+ for Junior Open Water. SUP Yoga is best for ages 8+."})],
   [/dinner|eat|food|restaurant|hungry|lunch|breakfast|coffee|simon|milk/i,()=>({t:"You have three choices: Simon's, 1886 Grill & Smokehouse, and The Milk House for coffee, pastries and ice cream. Book a table after your soak, you'll be hungry.",a:[['Reserve a table','act:dine']]})],
   [/cancel|change|reschedule/i,()=>({t:"You can cancel any booking from My Plans, free up to 4 hours before.",a:[['Open My Plans','go:plans']]})],
@@ -504,7 +575,7 @@ function ask(q){
 /* leave chat → restore scroll */
 const _go=go;go=function(t){const s=$('#screen');if(s)s.style.overflow='';_go(t)};
 render();
-document.querySelectorAll('[data-demo]').forEach(b=>b.onclick=()=>{const d=b.dataset.demo;if(d==='pay'){state.tab='book';startBook('scuba');state.book.hour=11;state.view='book';render();confirmBook()}else if(d==='scuba'||d==='spa'){state.tab='book';startBook(d==='spa'?'dine':d)}else go(d)});
+document.querySelectorAll('[data-demo]').forEach(b=>b.onclick=()=>{const d=b.dataset.demo;if(d==='stay'){go('stay');state.rs={cart:{'Smokehouse burger':1,'Hot cocoa':2},when:'asap',note:''};state.view='rs';render()}else if(d==='pay'){state.tab='book';startBook('scuba');state.book.hour=11;state.view='book';render();confirmBook()}else if(d==='scuba'||d==='spa'){state.tab='book';startBook(d==='spa'?'dine':d)}else go(d)});
 </script>
 </body>
 </html>
