@@ -159,6 +159,18 @@ h1,h2,h3{font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;margin:0
 .typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}
 @keyframes b{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
 
+.row .grow small{display:block}
+.ln{display:flex;justify-content:space-between;gap:12px;padding:6px 0;color:var(--muted)}
+.ln.tot{color:var(--ink);font-weight:700;border-top:1px solid var(--line);margin-top:6px;padding-top:10px;font-size:17px}
+.pm{display:flex;align-items:center;gap:12px;width:100%;margin-bottom:8px;padding:12px 14px}
+.pm .pmi{font-size:22px}
+.pm .rd{width:20px;height:20px;border-radius:50%;border:2px solid var(--line);flex:none}
+.pm.on{border-color:var(--teal);box-shadow:0 0 0 1px var(--teal)}
+.pm.on .rd{border-color:var(--teal);background:radial-gradient(var(--teal) 45%,transparent 50%)}
+.addcard{color:var(--teal);font-weight:700;padding:6px 2px}
+.fl{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
+.fi{width:100%;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:11px 12px;font:inherit;margin-bottom:6px;outline:none}
+.fi:focus{border-color:var(--teal)}
 .toast{position:absolute;left:16px;right:16px;bottom:78px;background:var(--deep);color:#fff;padding:12px 14px;border-radius:14px;box-shadow:var(--shadow);transform:translateY(20px);opacity:0;pointer-events:none;transition:.25s;z-index:9}
 .toast.show{transform:none;opacity:1}
 .note{font-size:11px;color:var(--muted);text-align:center;padding:18px 24px 6px}
@@ -175,6 +187,7 @@ h1,h2,h3{font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;margin:0
   <ol class="walk">
     <li><button data-demo="home"><b>Arrive</b><span>Live crater temperature and capacity</span></button></li>
     <li><button data-demo="scuba"><b>Book a dive</b><span>Date, option, time, add-ons, charge to room</span></button></li>
+    <li><button data-demo="pay"><b>Check out</b><span>Room charge, saved card or wallet</span></button></li>
     <li><button data-demo="plans"><b>Show the pass</b><span>QR entry at the crater tunnel</span></button></li>
     <li><button data-demo="spa"><b>Reserve dinner or the spa</b><span>Restaurants, treatments and adventures in the same flow</span></button></li>
     <li><button data-demo="chat"><b>Ask the concierge</b><span>Answers gear and kids questions, books for you</span></button></li>
@@ -243,7 +256,8 @@ function go(tab){state.tab=tab;state.view=null;state.book=null;render();$('#scre
 function render(){
   renderTabs();
   const s=$('#screen');
-  if(state.view==='book')s.innerHTML=bookView();
+  if(state.view==='pay')s.innerHTML=payView();
+  else if(state.view==='book')s.innerHTML=bookView();
   else if(state.tab==='home')s.innerHTML=homeView();
   else if(state.tab==='book')s.innerHTML=listView();
   else if(state.tab==='plans')s.innerHTML=plansView();
@@ -255,7 +269,7 @@ function bind(){
   document.querySelectorAll('[data-act]').forEach(b=>b.onclick=e=>{e.preventDefault();startBook(b.dataset.act)});
   document.querySelectorAll('[data-pass]').forEach(b=>b.onclick=()=>{state.pass=b.dataset.pass;state.tab='plans';state.view=null;render()});
   document.querySelectorAll('[data-cancel]').forEach(b=>b.onclick=()=>{state.plans=state.plans.filter(p=>p.id!==b.dataset.cancel);save();toast('Booking cancelled. No fee.');render()});
-  bindBook();
+  bindBook();bindPay();
 }
 
 /* home */
@@ -353,8 +367,8 @@ function bookView(){
     <div class="card">${ADDONS[b.act].map((x,i)=>`<button class="chk ${b.addons.has(i)?'on':''}" data-a="${i}"><i>${b.addons.has(i)?'✓':''}</i><span style="flex:1">${x[0]}</span><span class="price">${x[1]?'+'+money(x[1]):'Free'}</span></button>`).join('')}</div>
     ${b.act==='scuba'?'<p class="note" style="text-align:left;padding:10px 0 0">Gear, instructor and tank included. Health questionnaire is completed digitally after booking, no clipboard at the desk.</p>':''}
   </div>
-  <div class="sticky"><div class="total"><span>${p.total?'Total · charged to room '+state.guest.room:'No charge to reserve'}</span><span>${p.total?money(p.total):'$0'}</span></div>
-    <button class="btn" id="confirm" ${b.hour==null?'disabled':''}>${b.hour==null?'Pick a time':'Confirm booking'}</button></div>`;
+  <div class="sticky"><div class="total"><span>${p.total?'Subtotal':'No charge to reserve'}</span><span>${p.total?money(p.total):'$0'}</span></div>
+    <button class="btn" id="confirm" ${b.hour==null?'disabled':''}>${b.hour==null?'Pick a time':(p.total?'Continue to payment':'Confirm reservation')}</button></div>`;
 }
 function bindBook(){
   if(state.view!=='book')return;
@@ -371,12 +385,55 @@ function bindBook(){
   const c=$('#confirm');if(c)c.onclick=confirmBook;
 }
 function confirmBook(){
+  const p=bookPrice();
+  if(!p.total){finishBook();return}
+  state.pay={method:'room',busy:false,newCard:false};
+  state.view='pay';render();$('#screen').scrollTop=0;
+}
+function finishBook(){
   const b=state.book,a=ACTS[b.act],p=bookPrice();
+  const tax=Math.round(p.total*TAX*100)/100;
   const plan={id:'HS'+Math.random().toString(36).slice(2,7).toUpperCase(),act:b.act,date:b.date,hour:b.hour,guests:b.guests,tots:b.tots,dur:b.dur,
-    variant:a.variants?a.variants[b.variant][0]:null,addons:[...b.addons].map(i=>ADDONS[b.act][i][0]),total:p.total};
+    variant:a.variants?a.variants[b.variant][0]:null,addons:[...b.addons].map(i=>ADDONS[b.act][i][0]),total:p.total+tax,paid:state.pay?state.pay.method:null};
   state.plans.push(plan);save();
-  state.view=null;state.tab='plans';state.pass=plan.id;render();
-  toast('Booked! Added to room '+state.guest.room+' · confirmation sent');
+  const how=state.pay?(state.pay.method==='room'?'charged to room '+state.guest.room:'paid by card'):'confirmed';
+  state.view=null;state.tab='plans';state.pass=plan.id;state.pay=null;render();
+  toast('Booked and '+how+'. Confirmation sent.');
+}
+const TAX=0.085;
+function payView(){
+  const b=state.book,a=ACTS[b.act],p=bookPrice(),pay=state.pay;
+  const tax=Math.round(p.total*TAX*100)/100,total=p.total+tax;
+  const when=new Date(b.date+'T12:00').toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
+  const unit=p.unit,n=a.unit==='party'?1:b.guests;
+  const M=[['room','Charge to room '+state.guest.room,'Appears on your checkout bill','🛏️'],['card','Visa ending 4242','Saved card · expires 08/28','💳'],['wallet','Digital wallet','Pay with your phone','📱']];
+  return `<div class="top"><button class="back" id="payback">←</button><h1>Checkout</h1></div>
+  <div class="sec" style="padding-top:8px">
+    <div class="card">
+      <div class="row" style="padding-top:0"><div class="badge">${a.icon}</div><div class="grow"><b>${a.name}</b><small>${when} · ${fmtH(b.hour)}${b.dur>=480?'':' · '+b.dur+' min'}</small>${a.variants?`<small>${a.variants[b.variant][0]}</small>`:''}</div></div>
+      <div class="ln"><span>${n} × ${money(unit)}${a.unit==='party'?'':' ('+a.unit+')'}</span><span>${money(n*unit)}</span></div>
+      ${b.tots?`<div class="ln"><span>${b.tots} child${b.tots>1?'ren':''} 2 &amp; under</span><span>Free</span></div>`:''}
+      ${[...b.addons].map(i=>`<div class="ln"><span>${ADDONS[b.act][i][0]}</span><span>${ADDONS[b.act][i][1]?money(ADDONS[b.act][i][1]*n):'Free'}</span></div>`).join('')}
+      <div class="ln"><span>Tax (demo rate 8.5%)</span><span>${money(tax)}</span></div>
+      <div class="ln tot"><span>Total</span><span>${money(total)}</span></div>
+    </div>
+    <div class="lbl">Pay with</div>
+    ${M.map(m=>`<button class="card pm ${pay.method===m[0]?'on':''}" data-pm="${m[0]}"><span class="pmi">${m[3]}</span><span style="flex:1;text-align:left"><b>${m[1]}</b><small style="display:block;color:var(--muted)">${m[2]}</small></span><i class="rd"></i></button>`).join('')}
+    <button class="addcard" id="addcard">${pay.newCard?'− Hide card form':'+ Add a new card'}</button>
+    ${pay.newCard?`<div class="card" style="margin-top:8px"><label class="fl" for="cn">Card number</label><input class="fi" id="cn" inputmode="numeric" placeholder="1234 5678 9012 3456" autocomplete="off">
+      <div style="display:flex;gap:10px"><div style="flex:1"><label class="fl" for="ce">Expiry</label><input class="fi" id="ce" placeholder="MM/YY" autocomplete="off"></div><div style="flex:1"><label class="fl" for="cc">CVC</label><input class="fi" id="cc" placeholder="123" autocomplete="off"></div></div>
+      <small style="color:var(--muted)">Demo only. Do not enter a real card number.</small></div>`:''}
+    <p class="note" style="text-align:left;padding:14px 0 0">Free cancellation up to 4 hours before your start time. Demo only: no payment is processed.</p>
+  </div>
+  <div class="sticky"><button class="btn" id="paynow" ${pay.busy?'disabled':''}>${pay.busy?'Processing…':'Pay '+money(total)}</button></div>`;
+}
+function bindPay(){
+  if(state.view!=='pay')return;
+  const pay=state.pay,rr=()=>{const y=$('#screen').scrollTop;render();$('#screen').scrollTop=y};
+  $('#payback').onclick=()=>{state.view='book';state.pay=null;render()};
+  document.querySelectorAll('[data-pm]').forEach(e=>e.onclick=()=>{pay.method=e.dataset.pm;rr()});
+  $('#addcard').onclick=()=>{pay.newCard=!pay.newCard;rr()};
+  $('#paynow').onclick=()=>{pay.busy=true;rr();setTimeout(finishBook,1300)};
 }
 
 /* plans */
@@ -447,7 +504,7 @@ function ask(q){
 /* leave chat → restore scroll */
 const _go=go;go=function(t){const s=$('#screen');if(s)s.style.overflow='';_go(t)};
 render();
-document.querySelectorAll('[data-demo]').forEach(b=>b.onclick=()=>{const d=b.dataset.demo;if(d==='scuba'||d==='spa'){state.tab='book';startBook(d==='spa'?'dine':d)}else go(d)});
+document.querySelectorAll('[data-demo]').forEach(b=>b.onclick=()=>{const d=b.dataset.demo;if(d==='pay'){state.tab='book';startBook('scuba');state.book.hour=11;state.view='book';render();confirmBook()}else if(d==='scuba'||d==='spa'){state.tab='book';startBook(d==='spa'?'dine':d)}else go(d)});
 </script>
 </body>
 </html>
